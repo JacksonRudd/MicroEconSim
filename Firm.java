@@ -71,17 +71,6 @@ public class Firm implements Incrementable, Comparable<Firm> {
 		while(demandPerYear != 0.0){
 			demandPerYear = demandGivenOtherFirms(priceIndex) * 600;
 			double revenueInYear = priceIndex* Math.min(demandPerYear, (double) factory.rate.getValue());
-//			if(!market.outOfStock() && market.getLowestPrice() == 37){
-//				System.out.println("price        : " + priceIndex);
-//				System.out.println("	demandPerYear: " + demandPerYear);
-//				System.out.println("	revenue      : " + revenueInYear);
-//				System.out.println("	factoryRate  : " + factory.rate.getValue());
-//				System.out.println("	maxRevenue   : " + maxRevenue);
-//			}
-			
-
-			//there is no reason to sell them quicker than we make them
-			//&& demandPerYear <= factory.rate.getValue()
 			if(maxRevenue < revenueInYear ){
 				maxRevenue = revenueInYear;
 				argMax = priceIndex;

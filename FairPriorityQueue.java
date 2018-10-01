@@ -6,22 +6,49 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-public class PriorityQueueRandomizesPoll<E extends Comparable<E>> extends AbstractQueue<E> {
+public class FairPriorityQueue<E extends Comparable<E>> extends AbstractQueue<E> {
 
 	PriorityQueue<E> pQueue = new PriorityQueue<E>();
 	Set<E> smallestMembers = new HashSet<E>();
-	List<E> allMembers = new ArrayList<E>();
+	private List<E> allMembers = new ArrayList<E>();
 	E nextRandomMember;
 
 	@Override
 	public boolean offer(E e) {
 		pQueue.offer(e);
+		allMembers.add(e);
 		updateSmallestMembers();
 		return true;
 	}
+	
+	public boolean IamInSmallestSet(E member){
+		return smallestMembers.contains(member);
+	}
+	
+	public E secondLargestMember(){
+		return pQueue.peek();
+	}
+	
+	public int sizeOfSmallestMembers(){
+		if(smallestMembers == null){
+			return 0;
+		}
+		return smallestMembers.size();
+	}
+	
+	public List<E> getAllMembers(){
+		return allMembers;
+	}
+	
 	//if pQueue is ahead of smallest
-	public void updateSmallestMembers(){
-		if(pQueue.isEmpty() || smallestMembers.isEmpty()){
+	private void updateSmallestMembers(){
+		if(pQueue.isEmpty()){
+			setNextRandomMember();
+			return;
+		}
+		if(smallestMembers.isEmpty()){
+			addQueueItemsToSmallestMembers();
+			setNextRandomMember();
 			return;
 		}
 		E elementOfSmallestMembers = smallestMembers.iterator().next(); 
@@ -37,12 +64,15 @@ public class PriorityQueueRandomizesPoll<E extends Comparable<E>> extends Abstra
 	private void flushSetIntoQueue(){
 		for(E obj : smallestMembers)
 		{
-		    smallestMembers.remove(obj);
 			pQueue.offer(obj);
 		}
+		smallestMembers.clear();
 	}
 	
 	private void addQueueItemsToSmallestMembers(){
+		if(smallestMembers.isEmpty()){
+			smallestMembers.add(pQueue.poll());
+		}
 		E smallestElement = smallestMembers.iterator().next(); 
 		while(!pQueue.isEmpty()){
 			if(pQueue.peek().compareTo(smallestElement) == 0){

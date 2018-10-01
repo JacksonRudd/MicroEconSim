@@ -26,7 +26,7 @@ public class Tests {
 		Firm firm2 = new Firm(m);
 		firm.price = 10;
 		firm.inventory = 0;
-		m.addFirm(firm);
+		m.addFirm(firm2);
 		assert(firm2.demandGivenOtherFirms(5) > 0);
 		
 		firm.price = 3;

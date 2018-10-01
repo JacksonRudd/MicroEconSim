@@ -1,13 +1,11 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.PriorityQueue;
 
 public class Market implements Incrementable, IMarketForConsumer{
 	DemandCurve demandCurve;
-	PriorityQueue<Firm> pQueue = new PriorityQueue<Firm>(); 
 	List<Consumer> consumers;
-	List<Firm> firmsList = new ArrayList<Firm>();
-	List<Firm> cheapestFirms = new ArrayList<Firm>();
+	FairPriorityQueue<Firm> firmQueue = new FairPriorityQueue<Firm>();
 	
 	public static Market quickCreate(){
 		Consumer cust = new Consumer();
@@ -25,14 +23,16 @@ public class Market implements Incrementable, IMarketForConsumer{
 	}
 	
 	public void nextTimeStep() {
-		for(Firm f: firmsList){
-			f.nextTimeStep();
+		List<Firm> allFirms = firmQueue.getAllMembers();
+		Collections.shuffle(allFirms);
+		for(Firm firm : allFirms){
+			firm.nextTimeStep();
 		}
 	}
 
 	public void addFirm(Firm firm) {
-		pQueue.add(firm);	
-		firmsList.add(firm);
+		firmQueue.offer(firm);
+		
 	}
 	
 	//should be used with 
@@ -44,10 +44,8 @@ public class Market implements Incrementable, IMarketForConsumer{
 	}
 	
 	private Firm getCheapestFirm() {		
-		while(pQueue.peek() != null && pQueue.peek().outOfStock()){
-			pQueue.poll();
-		}
-		return pQueue.peek();
+		firmQueue.setNextRandomMember();
+		return firmQueue.peek();
 	}
 
 	public void sellProductToConsumer() {
@@ -64,36 +62,34 @@ public class Market implements Incrementable, IMarketForConsumer{
 	}
 
 	public boolean outOfStock() {
-		return getCheapestFirm() == null;
+		return getCheapestFirm().outOfStock();
 	}
 
 	public void updatePriceForFirm(Firm firm) {
-		pQueue.remove(firm);
-		pQueue.offer(firm);
+		firmQueue.updatePriority(firm);
 	}
 
 	public Integer getLowestPriceOfOtherFirms(Firm firm) {
-		Integer lowestPrice;
-		if(this.outOfStock()){
-			return null;
-		}
-		if(this.getCheapestFirm() == firm){
-			pQueue.poll();
-			if(this.outOfStock()){
-				lowestPrice = null;
-			}else{
-				lowestPrice = this.getLowestPrice();
-			}
-			pQueue.offer(firm);
+		if(firmQueue.sizeOfSmallestMembers() > 1){
+			return firmQueue.peek().price;
 		}else{
-			lowestPrice = this.getLowestPrice(); 
+			if(firmQueue.pQueue.isEmpty()){
+				return null;
+			}			
+			if(firmQueue.IamInSmallestSet(firm)){
+				return firmQueue.secondLargestMember().price;
+			}else{
+				return firmQueue.peek().price;
+			}
 		}
-		return lowestPrice;
 	}
 
 	public double numberOfOtherFirmsOfferingLowestPrice(Firm firm) {
-		
-		return 3;
+		if(firmQueue.IamInSmallestSet(firm)){
+			return firmQueue.sizeOfSmallestMembers() - 1;
+		}else{
+			return firmQueue.sizeOfSmallestMembers();
+		}
 	}
 
 	public DemandCurve getDemandCurve() {

@@ -7,6 +7,12 @@ public class Firm implements Incrementable, Comparable<Firm> {
 	private int profit;
 	private int breakEvenPrice;
 	
+	public void setPrice(int price ){
+		if(this.price == 67){
+			System.out.print(" ");
+		}
+		this.price = price;
+	}
 	
 	public void print(){
 		System.out.println("inventory: " + inventory);
@@ -14,10 +20,7 @@ public class Firm implements Incrementable, Comparable<Firm> {
 		System.out.println("profit: " + profit);
 		System.out.println("rate: " + factory.rate);
 		System.out.println("breakEvenPrice: " + this.breakEvenPrice);
-
 		System.out.println();
-
-
 	}
 	
 	public Firm(Market m) {
@@ -25,10 +28,8 @@ public class Firm implements Incrementable, Comparable<Firm> {
 		this.profit = 0;
 		this.market = m;	
 		this.factory = new Factory(this);
-		this.inventory = 500;
+		this.inventory = 10000;
 		calculateBreakEvenPrice();
-
-
 	}
 
 
@@ -44,7 +45,6 @@ public class Firm implements Incrementable, Comparable<Firm> {
 		if(other.outOfStock()){
 			return -1;
 		}
-		
         //if this has a lower price than other, than it is a better deal
 		if ( this.getPrice() < other.getPrice() ){
         	return -1;
@@ -53,7 +53,6 @@ public class Firm implements Incrementable, Comparable<Firm> {
         }else{
         	return 1;
         }
-		 
     }
 	int getPrice() {
 		return price;
@@ -62,22 +61,36 @@ public class Firm implements Incrementable, Comparable<Firm> {
 	public void nextTimeStep(){
 		factory.nextTimeStep();
 		updatePrice();
-
-
 	}
-
+	//shouldn't sell them faster than we make them
 	public void updatePrice(){
 		double maxRevenue = 0;
 		int argMax = 0;
-		for(int priceIndex = 0; priceIndex< 10000; priceIndex++){
-			double demandPerYear = demandGivenOtherFirms(priceIndex) * 600;
+		int priceIndex = 0;
+		double demandPerYear = demandGivenOtherFirms(priceIndex) * 600;
+		while(demandPerYear != 0.0){
+			demandPerYear = demandGivenOtherFirms(priceIndex) * 600;
 			double revenueInYear = priceIndex* Math.min(demandPerYear, (double) factory.rate.getValue());
-			if(maxRevenue < revenueInYear){
+//			if(!market.outOfStock() && market.getLowestPrice() == 37){
+//				System.out.println("price        : " + priceIndex);
+//				System.out.println("	demandPerYear: " + demandPerYear);
+//				System.out.println("	revenue      : " + revenueInYear);
+//				System.out.println("	factoryRate  : " + factory.rate.getValue());
+//				System.out.println("	maxRevenue   : " + maxRevenue);
+//			}
+			
+
+			//there is no reason to sell them quicker than we make them
+			//&& demandPerYear <= factory.rate.getValue()
+			if(maxRevenue < revenueInYear ){
 				maxRevenue = revenueInYear;
 				argMax = priceIndex;
+
 			}
+			priceIndex += 1;
 		}
-		this.price = Math.max(argMax, breakEvenPrice);	
+
+		setPrice(Math.max(argMax, 0));	
 	}
 
 	
@@ -89,7 +102,7 @@ public class Firm implements Incrementable, Comparable<Firm> {
 		if(price > market.getLowestPriceOfOtherFirms(this)){
 			return 0;
 		}else if(price == market.getLowestPriceOfOtherFirms(this)){
-			return demandCurve.quantityDemandedInTimeStep(price) / market.numberOfOtherFirmsOfferingLowestPrice(this);
+			return demandCurve.quantityDemandedInTimeStep(price) /(market.numberOfOtherFirmsOfferingLowestPrice(this) + 1);
 		}
 		else { // if I have the lowest price i get all the demand
 			return demandCurve.quantityDemandedInTimeStep(price);
@@ -111,6 +124,7 @@ public class Firm implements Incrementable, Comparable<Firm> {
 		//find the rate of production AND PRICE that maximizes profit
 		double maxExpectedProfit = Double.MIN_VALUE; //per time step
 		RateOfProduction mostProfitableRateOfProduction = RateOfProduction.ZERO;
+		int bestPrice= 0;
 		for(int priceIndex = 0; priceIndex < 10000; priceIndex ++){
 			for(RateOfProduction rateOfProduction : RateOfProduction.values()){
 				int costPerGood = factory.costPerGoodAtRate(rateOfProduction);
@@ -121,10 +135,11 @@ public class Firm implements Incrementable, Comparable<Firm> {
 				if (profitPerYear > maxExpectedProfit){
 					maxExpectedProfit = profitPerYear;
 					mostProfitableRateOfProduction = rateOfProduction;
-					this.price = priceIndex;
+					bestPrice = priceIndex;
 				}
 			}
 		}
+		setPrice(bestPrice);
 		return mostProfitableRateOfProduction;
 	}
 
@@ -139,6 +154,9 @@ public class Firm implements Incrementable, Comparable<Firm> {
 		}
 		profit += price;
 		inventory-=1;
+		if(inventory == 0){
+			market.updatePriceForFirm(this);
+		}
 		System.out.println(this + " sold a product");
 		print();
 	}

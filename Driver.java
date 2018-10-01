@@ -5,23 +5,23 @@ public class Driver {
 
 		public static void main(String args[]){
 
-			Consumer cust = new Consumer();
-			List<Consumer> oneConsumer = new ArrayList<Consumer>();
-			oneConsumer.add(cust);
-			
-			Market m = new Market(oneConsumer);
-
-			for(int i = 0; i< 3; i++ ){
-				Firm firm = new Firm(m);
-				m.addFirm(firm);
-
+			List<Consumer> consumers = new ArrayList<Consumer>();
+			for(int i = 0; i< 10; i++ ){
+				Consumer cons = new Consumer();
+				consumers.add(cons);
 			}
 			
-			
-			
+			Market m = new Market(consumers);
+
+			for(int i = 0; i< 8; i++ ){
+				Firm firm = new Firm(m);
+				m.addFirm(firm);
+			}
 			while(true){
 				m.nextTimeStep();
-				cust.nextTimeStep();
+				for(Consumer c  : consumers){
+					c.nextTimeStep();
+				}
 			}
 		}
 }

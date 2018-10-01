@@ -8,9 +8,6 @@ public class Firm implements Incrementable, Comparable<Firm> {
 	private int breakEvenPrice;
 	
 	public void setPrice(int price ){
-		if(this.price == 67){
-			System.out.print(" ");
-		}
 		this.price = price;
 	}
 	
@@ -74,7 +71,6 @@ public class Firm implements Incrementable, Comparable<Firm> {
 			if(maxRevenue < revenueInYear ){
 				maxRevenue = revenueInYear;
 				argMax = priceIndex;
-
 			}
 			priceIndex += 1;
 		}
